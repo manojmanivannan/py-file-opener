@@ -17,7 +17,7 @@ A simple CLI tool to interactively open files in Vim, especially useful when wor
 ## Installation
 You can install directly from GitHub using pip:
 ```sh
-pip install git+https://github.com/yourusername/py-file-opener.git
+pip install git+https://github.com/manojmanivannan/py-file-opener.git
 ```
 
 ## Usage
