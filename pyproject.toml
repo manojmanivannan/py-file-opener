@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "py-file-opener"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.2.0"
+description = "Interactively pick and open files in your terminal editor"
 readme = "README.md"
 requires-python = ">=3.9.2"
 dependencies = [
@@ -14,3 +14,9 @@ dependencies = [
 
 [project.scripts]
 py-file-opener = "py_file_opener.__main__:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
