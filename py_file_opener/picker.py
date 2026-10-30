@@ -19,15 +19,36 @@ class PickerCancelled(Exception):
     """User cancelled the picker (ESC, Ctrl-C, no match) or it could not run."""
 
 
-def build_row(entry: Entry) -> str:
-    """Render one Entry as the five-column TAB-separated row fed to fzf."""
+def _row(entry: Entry, rel_width: int, size_width: int) -> str:
+    """Render one Entry with columns padded to the given batch widths.
+
+    Padding (rel left-aligned, size right-aligned) is what makes the fzf
+    columns line up -- fzf renders tabs as a fixed gap but never aligns
+    variable-width fields itself.
+    """
     return "{abs}\t{rel}\t{size}\t{mtime}\t{git}".format(
         abs=entry.abs_path,
-        rel=entry.rel_path,
-        size=entry.size_h,
+        rel=entry.rel_path.ljust(rel_width),
+        size=entry.size_h.rjust(size_width),
         mtime=entry.mtime_h,
         git=entry.git_badge,
     )
+
+
+def build_row(entry: Entry) -> str:
+    """Render one Entry as the five-column TAB-separated row fed to fzf.
+
+    Batch-level column padding is applied by build_rows; a lone row pads to
+    its own field widths, i.e. is unpadded.
+    """
+    return _row(entry, len(entry.rel_path), len(entry.size_h))
+
+
+def build_rows(entries: List[Entry]) -> List[str]:
+    """Render entries as rows with columns padded to batch-wide widths."""
+    rel_width = max(len(entry.rel_path) for entry in entries)
+    size_width = max(len(entry.size_h) for entry in entries)
+    return [_row(entry, rel_width, size_width) for entry in entries]
 
 
 def build_fzf_command(entries: List[Entry], config: Config, fzf_path: str) -> List[str]:
@@ -99,7 +120,7 @@ def main_select(
     if fzf_path and stdin_isatty and stdout_isatty:
         cmd = build_fzf_command(entries, config, fzf_path)
         try:
-            out, code = _run_fzf([build_row(e) for e in entries], cmd)
+            out, code = _run_fzf(build_rows(entries), cmd)
         except OSError as exc:
             print("picker: fzf failed to run: %s" % exc, file=sys.stderr)
             raise PickerCancelled(str(exc))
